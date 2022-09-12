@@ -95,7 +95,7 @@ const BookType = new GraphQLObjectType({
     })
 })
 
-// to return the entire list
+// setting up GET request
 const RootQueryType = new GraphQLObjectType({
     name: 'Query',
     description: 'Root Query',
@@ -132,14 +132,87 @@ const RootQueryType = new GraphQLObjectType({
             resolve: (parent, args) => books.find(book => book.id === args.id)
         },
 
+        // returns a single author
+        author: {
+            type: AuthorType,
+            description: 'a single Authors',
+
+            args: {
+                id: { type: GraphQLInt }
+            },
+            resolve: (parent, args) => authors.find(author => author.id === args.id)
+            },
+
     })
 })
+
+// setting up POST, PUT and DELETE requests
+const RootMutationType = new GraphQLObjectType({
+    name: 'Mutation',
+    description: 'Root Mutation',
+    fields: () => ({
+
+        // POST request
+        addBook: {
+            type: BookType,
+            description: 'Add a book',
+
+            // args to be passed by client, name and authorId required
+            args: {
+                name: { type: GraphQLNonNull(GraphQLString)},
+                authorId: { type: GraphQLNonNull(GraphQLInt)},
+            },
+            resolve: (parent, args) => {
+                // create a book first
+                const book = { 
+                    id: books.length + 1, 
+                    name: args.name, 
+                    authorId: args.authorId 
+                }
+                // add this new book to the array
+                books.push(book)
+
+                // return the new book
+                return book
+            }
+        },
+
+        // POST request
+        addAuthor: {
+            type: AuthorType,
+            description: 'Add an Author',
+
+            // args to be passed by client, name of author required
+            args: {
+                name: { type: GraphQLNonNull(GraphQLString)},
+            },
+            resolve: (parent, args) => {
+                // create an author first
+                const author = { 
+                    id: authors.length + 1, 
+                    name: args.name, 
+                }
+                // add this new book to the array
+                authors.push(author)
+
+                // return the new author
+                return author
+            }
+        },
+    })
+})
+
 
 // defining the schema
 // we query this schema (RootQueryType) to present the data
 const schema2 = new GraphQLSchema({
-    query: RootQueryType
+    // query for get request
+    query: RootQueryType,
+
+    // mutation for POST, PUT, DELETE
+    mutation: RootMutationType
 })
+
 
 app.use('/graphql', graphqlHTTP({
     // schema: schema1,
